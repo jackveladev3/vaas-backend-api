@@ -26,7 +26,7 @@ $ npm install serverless -g
 Clone this repo.
 
 ```bash
-$ git clone https://github.com/prd-inc/vaas-backend-api.git
+$ git clone https://github.com/jackveladev3/vaas-backend-api.git
 ```
 
 Go to one of the services in the `services/` dir.
@@ -73,4 +73,4 @@ Deploy One Lambda Function Which is internally connected with other API
 serverless deploy -s GetLectures
 ```
 
-The services are dependent on the resources that are created [in this accompanying repo](https://github.com/prd-inc/vaas-backend-resources.git).
+The services are dependent on the resources that are created [in this accompanying repo](https://github.com/jackveladev3/vaas-backend-resources.git).
