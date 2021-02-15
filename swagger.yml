@@ -1,0 +1,2001 @@
+---
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: "dev-smartclass-app-admin-api"
+host: "dev.api.smartclass.jp"
+
+tags:
+  - name: admin
+    description: 管理者
+  - name: student
+    description: 学生情報
+  - name: tutor
+    description: 講師情報
+
+schemes:
+  - "https"
+paths:
+  /admin/login:
+    post:
+      tags:
+        - admin
+      summary: it will create or fetch admin based on the request flag
+      operationId: postAdminLogin
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                  - "create"
+                  - "get"
+                description: "get flag will fetch the data from admin and create flag will insert admin in table, for create flag you should pass administratorName, enterpriseId on body"
+              administratorName:
+                type: string
+                description: "only for create flag"
+              enterpriseId:
+                type: string
+                description: "for create and get flag"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Admin"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/listWorkbooks:
+    get:
+      tags:
+        - admin
+      summary: it will list all workbooks
+      operationId: getListAllWorkbooks
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/WorkBook"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/createLecture:
+    post:
+      tags:
+        - admin
+      summary: it will create lecture
+      operationId: postCreateLecture
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: this contains enterprise id
+              startTime:
+                type: string
+                description: this contain start lecture time
+              endTime:
+                type: string
+                description: this contain end lecture time
+              students:
+                type: array
+                items:
+                  $ref: "#/definitions/Participant"
+                description: "this contains array of object and each object will contain id and workbooks"
+              unregisteredStudent:
+                type: array
+                items:
+                  $ref: "#/definitions/unregisteredStudents"
+                description: "this contains array of object and each object will contain id and workbooks"
+              tutor:
+                type: string
+                description: "this contains tutor id"
+              unregisteredTutor:
+                items:
+                  $ref: "#/definitions/unregisteredTutor"
+                  description: "this contains array of object and each object will contain tutor name, tutot family name and email address"
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: object
+            items:
+              type: object
+              properties:
+                lectureId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                lectureDate:
+                  type: string
+                  example: "2021-01-01 12:00"
+                startTime:
+                  type: string
+                  example: "9:30"
+                endTime:
+                  type: string
+                  example: "12:30"
+                length:
+                  type: string
+                  example: "3hours"
+                enterpriseId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                adminId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                students:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Participant"
+                tutor:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                createdDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+                updatedDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+                deletedDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/updateLecture:
+    put:
+      tags:
+        - admin
+      summary: it will update lecture
+      operationId: postUpdateLecture
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              lectureId:
+                type: string
+                description: this contains lecture id
+              enterpriseId:
+                type: string
+                description: this contains enterprise id
+              startTime:
+                type: string
+                description: this contain start lecture time
+              contentUpdated:
+                type: number
+                enum:
+                  - 1
+                  - 0
+                description: // 1 means updated and 0 means not updated
+              endTime:
+                type: string
+                description: this contain end lecture time
+              students:
+                items:
+                  $ref: "#/definitions/Participant"
+                description: "this contains array of object and each object will contain id and workbooks"
+              unregisteredStudent:
+                items:
+                  $ref: "#/definitions/unregisteredStudents"
+                  description: "this contains array of object and each object will contain student name, student family name and workbooks"
+              tutor:
+                type: string
+                description: "this contains tutor id"
+              oldStudents:
+                type: array
+                items:
+                  type: string
+                description: "this will contain all old students ids"
+              oldTutor:
+                type: string
+                description: "this contains old tutor id"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: object
+            items:
+              type: object
+              properties:
+                lectureId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                lectureDate:
+                  type: string
+                  example: "2021-01-01 12:00"
+                startTime:
+                  type: string
+                  example: "9:30"
+                endTime:
+                  type: string
+                  example: "12:30"
+                length:
+                  type: string
+                  example: "3hours"
+                enterpriseId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                adminId:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                students:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Participant"
+                tutor:
+                  type: string
+                  example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+                createdDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+                updatedDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+                deletedDate:
+                  type: string
+                  example: "2020-09-22T07:34:22.677Z"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/deleteLecture:
+    post:
+      tags:
+        - admin
+      summary: it will delete lecture
+      operationId: postDeleteLecture
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              lectureId:
+                type: string
+                description: this contains lecture id which need to be deleted
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: string
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/uploadWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will generate presigned url for files to be uploaded on s3 bucket
+      operationId: postAdminUploadWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              userId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/updateWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will save uploaded array in db for particiapnt
+      operationId: postAdminUpdateWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  # white board uploads
+  /admin/uploads:
+    post:
+      tags:
+        - admin
+      summary: it will generate presigned url for files to be uploaded on s3 bucket
+      operationId: postAdminUpload
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              studentId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/updateUploaded:
+    post:
+      tags:
+        - admin
+      summary: it will save uploaded array in db for particiapnt
+      operationId: postAdminUpdateUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/deleteUploaded:
+    post:
+      tags:
+        - admin
+      summary: it will delete image from s3 and update uploaded array in db for a participant
+      operationId: postAdminDeleteUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              fileName:
+                type: string
+                description: "File name with path you want to delete"
+              uploaded:
+                type: array
+                items:
+                  type: string
+                description: "All files paths except deleted file path"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/updateStudent:
+    post:
+      tags:
+        - admin
+      summary: it will update student information based on student id
+      operationId: postAdminUpdateStudent
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              studentId:
+                type: string
+                description: "Student id"
+              studentName:
+                type: string
+                description: "Student Name"
+              studentFamilyName:
+                type: string
+                description: "Student Family Name"
+              email:
+                type: string
+                description: "Student Email"
+              memo:
+                type: string
+                description: "Student Description"
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Student"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/updateTutor:
+    post:
+      tags:
+        - admin
+      summary: it will update tutor information based on tutor id
+      operationId: postAdminUpdateTutor
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              tutorId:
+                type: string
+                description: "Tutor id"
+              tutorFirstName:
+                type: string
+                description: "Tutor First Name"
+              tutorFamilyName:
+                type: string
+                description: "Tutor Family Name"
+              email:
+                type: string
+                description: "Tutor Email"
+              memo:
+                type: string
+                description: "Tutor Description"
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Tutor"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/login:
+    post:
+      tags:
+        - student
+      summary: it will create student based on the request flag
+      operationId: postStudentLogin
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              studentName:
+                type: string
+                description: ""
+              email:
+                type: string
+                description: ""
+              studentFamilyName:
+                type: string
+                description: ""
+              enterpriseId:
+                type: string
+                description: ""
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Student"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/get/{enterpriseId}/{studentId}:
+    get:
+      tags:
+        - student
+      summary: it will fetch student based on the request flag
+      operationId: postStudentGet
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: path
+          name: studentId
+          type: string
+          required: true
+        - in: path
+          name: enterpriseId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Student"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/uploadWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will generate presigned url for files to be uploaded on s3 bucket
+      operationId: postStudentUploadWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              userId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/updateWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will save uploaded array in db for particiapnt
+      operationId: postStudentUpdateWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/uploads:
+    post:
+      tags:
+        - student
+      summary: it will generate presigned url for uploads
+      operationId: postStudentUpload
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              studentId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/updateUploaded:
+    post:
+      tags:
+        - student
+      summary: it will save uploaded array in db
+      operationId: postStudentUpdateUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              studentId:
+                type: string
+                description: "Student id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/deleteUploaded:
+    post:
+      tags:
+        - student
+      summary: it will delete image from s3 and update uploaded array in db for a participant
+      operationId: postStudentDeleteUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "Id of student"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              fileName:
+                type: string
+                description: "File name with path you want to delete"
+              uploaded:
+                type: array
+                items:
+                  type: string
+                description: "All files paths except deleted file path"
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/login:
+    post:
+      tags:
+        - tutor
+      summary: it will create tutor based on the request flag
+      operationId: postTutorLogin
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              tutorFamilyName:
+                type: string
+                description: "Tutor Family Name"
+              tutorFirstName:
+                type: string
+                description: ""
+              email:
+                type: string
+                description: ""
+              enterpriseId:
+                type: string
+                description: ""
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Tutor"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/get/{enterpriseId}/{tutorId}:
+    get:
+      tags:
+        - tutor
+      summary: it will fetch tutor based on the request flag
+      operationId: postTutorGet
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: path
+          name: tutorId
+          type: string
+          required: true
+        - in: path
+          name: enterpriseId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Tutor"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/uploadWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will generate presigned url for files to be uploaded on s3 bucket
+      operationId: postTutorUploadWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              userId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/updateWhiteboardImgs:
+    post:
+      tags:
+        - admin
+      summary: it will save uploaded array in db for particiapnt
+      operationId: postTutorUpdateWhiteboardImgs
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/uploads:
+    post:
+      tags:
+        - tutor
+      summary: it will generate presigned url for uploads
+      operationId: postTutorUpload
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              enterpriseId:
+                type: string
+                description: "Enterprise id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              studentId:
+                type: string
+                description: "Student id"
+              fileData:
+                type: array
+                items:
+                  $ref: "#/definitions/FileData"
+                description: "this array contains filedata which need to be uploaded filename and content type"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Files"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/updateUploaded:
+    post:
+      tags:
+        - tutor
+      summary: it will save uploaded array in db for tutor
+      operationId: postTutorUpdateUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              uploaded:
+                type: array
+                items:
+                  type: string
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/deleteUploaded:
+    post:
+      tags:
+        - tutor
+      summary: it will delete image from s3 and update uploaded array in db for a participant
+      operationId: postTutorDeleteUploaded
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "User id"
+              lectureId:
+                type: string
+                description: "Lecture id"
+              fileName:
+                type: string
+                description: "File name with path you want to delete"
+              uploaded:
+                type: array
+                items:
+                  type: string
+                description: "All files paths except deleted file path"
+
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: "#/definitions/Participant"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/resendEmail:
+    post:
+      tags:
+        - tutor
+      summary: it will resend email to user(tutor and student)
+      operationId: tutorResendEmail
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "id of user"
+              lectureId:
+                type: string
+                description: "id of lecture"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "email sent successfully"
+              data:
+                $ref: "#/definitions/LectureDetails"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/getLecture/{lectureURLId}:
+    get:
+      tags:
+        - tutor
+      summary: tutor can fetch lecture details by lectureId
+      operationId: tutorGetLecture
+      description: "it will return lecture information if lecture id found in database"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: lectureURLId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Lecture"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /tutor/token/{lectureURLId}:
+    get:
+      tags:
+        - tutor
+      summary: tutor can fetch token
+      operationId: tutorToken
+      description: "it will return jwt token which will use during the AppSync configuration in front side"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: lectureURLId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Token"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/token/{lectureURLId}:
+    get:
+      tags:
+        - student
+      summary: student can fetch token
+      operationId: studentToken
+      description: "it will return jwt token which will use during the AppSync configuration in front side"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: lectureURLId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Token"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/getLectures/{monthNumber}/{day}:
+    get:
+      tags:
+        - admin
+      summary: admin can fetch lectures by month and day wise
+      operationId: get
+      description: "it will return all lectures with participants info based on the day and month information"
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: path
+          name: monthNumber
+          type: string
+          required: true
+        - in: path
+          name: day
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Lecture"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /getLecture/{lectureId}:
+    get:
+      tags:
+        - admin
+      summary: admin can fetch lectures by lectureId
+      operationId: getLecture
+      description: "it will return lecture information if lecture id found in database"
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: path
+          name: lectureId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Lecture"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /getUserMaterial/{userId}/{lectureId}:
+    get:
+      tags:
+        - admin
+      summary: admin can fetch lectures by lectureId and userId
+      operationId: getUserMaterial
+      description: "it will return user material information if lectureId and userId found in database"
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名tokenを持っていたら、入れる
+          type: string
+        - in: path
+          name: userId
+          type: string
+          required: true
+        - in: path
+          name: lectureId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+            properties:
+              workbooks:
+                $ref: "#/definitions/WorkBooks"
+              uploaded:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/resendEmail:
+    post:
+      tags:
+        - admin
+      summary: it will resend email to user(tutor and student)
+      operationId: resendEmail
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "id of user"
+              lectureId:
+                type: string
+                description: "id of lecture"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "email sent successfully"
+              data:
+                $ref: "#/definitions/LectureDetails"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /admin/reassignMaterial:
+    post:
+      tags:
+        - admin
+      summary: it will reassign material to user(tutor and student)
+      operationId: reassignMaterial
+      description: ""
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: Cognito フェデレーテッドアイデンティティから受け取った「アクセスキーID」「セキュリティキー」「セッショントークン」をもとに作成した署名
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: "id of user"
+              lectureId:
+                type: string
+                description: "id of lecture"
+              workbooks:
+                type: array
+                items:
+                  $ref: "#/definitions/WorkBooks"
+                description: "the same array format of create lecture workbooks params"
+      responses:
+        "200":
+          description: 成功
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "material updated successfully"
+              data:
+                $ref: "#/definitions/LectureDetails"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+  /student/getLecture/{lectureURLId}:
+    get:
+      tags:
+        - student
+      summary: student can fetch lecture details by lectureURLId
+      operationId: studentGetLecture
+      description: "it will return lecture information if lecture id found in database"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: lectureURLId
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Lecture"
+        "400":
+          description: inputが不正
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: サーバーエラー
+          schema:
+            $ref: "#/definitions/NetworkErrorResponse"
+
+definitions:
+  Lecture:
+    type: object
+    properties:
+      length:
+        type: string
+      enterpriseId:
+        type: string
+      lectureId:
+        type: string
+      adminId:
+        type: string
+      lectureDate:
+        type: string
+      createdDate:
+        type: string
+      deletedDate:
+        type: string
+      updatedDate:
+        type: string
+      lectureDetails:
+        type: array
+        items:
+          $ref: "#/definitions/LectureDetails"
+    xml:
+      name: Lecture
+
+  LectureDetails:
+    type: object
+    properties:
+      userType:
+        type: string
+      standby:
+        type: boolean
+      userId:
+        type: string
+      emailSent:
+        type: integer
+        description: Order Status
+        enum:
+          - 0
+          - 1
+      lectureId:
+        type: string
+      info:
+        type: object
+        description: it will be for student or tutor
+      createdDate:
+        type: string
+      updatedDate:
+        type: string
+      uploaded:
+        type: array
+        items:
+          type: string
+      workbooks:
+        type: array
+        items:
+          $ref: "#/definitions/WorkBooks"
+    xml:
+      name: LectureDetails
+
+  Student:
+    type: object
+    properties:
+      studentId:
+        type: string
+      studentName:
+        type: string
+      studentFamilyName:
+        type: string
+      email:
+        type: integer
+      createdDate:
+        type: integer
+      updatedDate:
+        type: integer
+      deletedDate:
+        type: integer
+    xml:
+      name: Student
+
+  Tutor:
+    type: object
+    properties:
+      tutorId:
+        type: string
+        example: ""
+      email:
+        type: string
+        example: "jd@aditetech.in"
+      tutorFamilyName:
+        type: string
+        example: "abc"
+      tutorName:
+        type: string
+        example: "test"
+      lastLoginDate:
+        type: number
+        example: 1599115011054
+      updatedDate:
+        type: number
+        example: "2020-09-22T07:34:22.677Z"
+      deletedDate:
+        type: number
+        example: "2020-09-22T07:34:22.677Z"
+    xml:
+      name: Tutor
+
+  Admin:
+    type: object
+    properties:
+      administratorName:
+        type: string
+      enterpriseId:
+        type: string
+      adminId:
+        type: string
+      createdDate:
+        type: string
+      updatedDate:
+        type: string
+      deletedDate:
+        type: string
+    xml:
+      name: Admin
+
+  Participant:
+    type: object
+    properties:
+      id:
+        type: string
+      workbooks:
+        type: array
+        items:
+          $ref: "#/definitions/WorkBooks"
+
+  unregisteredStudents:
+    type: object
+    properties:
+      studentName:
+        type: string
+      studentFamilyName:
+        type: string
+      workbooks:
+        type: array
+        items:
+          $ref: "#/definitions/WorkBooks"
+
+  unregisteredTutor:
+    type: object
+    properties:
+      tutorFirstName:
+        type: string
+      tutorFamilyName:
+        type: string
+      email:
+        type: string
+
+  WorkBooks:
+    type: object
+    properties:
+      pageId:
+        items:
+          type: string
+      id:
+        type: string
+    xml:
+      name: WorkBooks
+
+  FileData:
+    type: object
+    properties:
+      contentType:
+        type: string
+      filename:
+        type: string
+    xml:
+      name: FileData
+
+  Files:
+    type: object
+    properties:
+      contentType:
+        type: string
+      filename:
+        type: string
+      signedUrl:
+        type: string
+    xml:
+      name: FileData
+
+  WorkBook:
+    type: object
+    properties:
+      workbookId:
+        type: string
+        example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+      workbookName:
+        type: string
+        example: "English"
+      enterpriseId:
+        type: string
+        example: "0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"
+      pageId:
+        type: array
+        items:
+          type: string
+      studentId:
+        items:
+          type: array
+          items:
+            type: integer
+        example: ["0f6cbcdc-80cb-46b7-88b4-12b82b23f4c0"]
+      createdDate:
+        type: string
+        example: "2020-09-22T07:34:22.677Z"
+      updatedDate:
+        type: string
+        example: "2020-09-22T07:34:22.677Z"
+      deletedDate:
+        type: string
+        example: "2020-09-22T07:34:22.677Z"
+    xml:
+      name: WorkBook
+
+  Token:
+    type: object
+    properties:
+      jwtToken:
+        type: string
+        example: ""
+    xml:
+      name: ApiResponse
+
+  ApiResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        example: "Bad Request."
+    xml:
+      name: ApiResponse
+
+  NetworkErrorResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        example: "Internal server error."
+    xml:
+      name: NetworkErrorResponse

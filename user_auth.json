@@ -1,0 +1,8 @@
+{
+  "ClientId": "6cevuluqfftihjs61u0b162pu7",
+  "AuthFlow": "USER_PASSWORD_AUTH",
+  "AuthParameters": {
+    "USERNAME": "jd@motocle.com",
+    "PASSWORD": "Tech@123"
+  }
+}

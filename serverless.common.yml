@@ -1,0 +1,30 @@
+custom:
+  # Our stage is based on what is passed in when running serverless
+  # commands. Or fallsback to what we have set in the provider section.
+  stage: ${opt:stage, self:provider.stage}
+  resourcesStages:
+    prod: prod
+    dev: dev
+  resourcesStage: ${self:custom.resourcesStages.${self:custom.stage}, self:custom.resourcesStages.dev}
+  databaseServiceName: smartclass
+  lectureBaseUrl:
+    dev: https://dev.smartclass.jp
+    qa: ""
+    stage: ""
+  s3BucketName:
+    dev: smartclass-uploads-dev-s3bucket-1dx0mtjd0es7q
+    qa: ""
+    stage: ""
+  customDomain:
+    domainName: dev.api.smartclass.jp
+    stage: ${opt:stage, self:provider.stage}
+    certificateName: "*.dev.api.smartclass.jp"
+    createRoute53Record: false
+    
+
+lambdaPolicyXRay:
+  Effect: Allow
+  Action:
+    - xray:PutTraceSegments
+    - xray:PutTelemetryRecords
+  Resource: "*"

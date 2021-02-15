@@ -1,0 +1,570 @@
+service: smartclass-app-admin-api
+
+plugins:
+  - serverless-bundle
+  - serverless-domain-manager
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+custom: ${file(../../serverless.common.yml):custom}
+
+# package:
+#   individually: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: ap-northeast-1
+  tracing:
+    apiGateway: true
+    lambda: true
+
+  memorySize: 256
+
+  # These environment variables are made available to our functions
+  # under process.env.
+  environment:
+    TZ: Asia/Tokyo
+    REGION: ap-northeast-1
+    stage: ${self:custom.stage}
+    resourcesStage: ${self:custom.resourcesStage}
+    databaseServiceName: ${self:custom.databaseServiceName}
+    lectureBaseUrl: ${self:custom.lectureBaseUrl.dev}
+    bucketName: ${self:custom.s3BucketName.dev}
+
+  iamRoleStatements:
+    - ${file(../../serverless.common.yml):lambdaPolicyXRay}
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":parameter/*"
+
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":parameter/stripeSecretKey/*"
+            - ":parameter/sendGridApiKey/*"
+
+    - Effect: Allow
+      Action:
+        - ssm:GetParameters
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":parameter/cognito/*"
+
+    - Effect: Allow
+      Action:
+        - ssm:GetParameters
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":parameter/accessKey/*"
+
+    - Effect: Allow
+      Action:
+        - ssm:GetParameters
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:ssm:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":parameter/secretKey/*"
+
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminAddUserToGroup
+        - cognito-idp:AdminUpdateUserAttributes
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:cognito-idp:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":userpool/${self:provider.environment.REGION}*"
+
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchGetItem
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - ssm:GetParameter
+        - s3:ListBucket
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+      # Restrict our IAM role permissions to
+      # the specific table for the stage
+      Resource:
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-EnterpriseTableArn
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-AdminTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-AdminTableArn
+              - "index/*"
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-LectureTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-LectureTableArn
+              - "index/*"
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-ParticipantTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-ParticipantTableArn
+              - "index/*"
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-WorkBookTableArn
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-StudentTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-StudentTableArn
+              - "index/*"
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-TutorTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-TutorTableArn
+              - "index/*"
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-ChatTableArn
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-WorkBookPageTableArn
+        - "Fn::ImportValue": ${self:custom.resourcesStage}-UploadTableArn
+        - Fn::Join:
+            - "/"
+            - - "Fn::ImportValue": ${self:custom.resourcesStage}-UploadTableArn
+              - "index/*"
+
+functions:
+  # admin
+  AdminLogin:
+    handler: src/admin/login/login.main
+    warmup: v1
+    timeout: 20
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/login
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # create lecture
+  CreateLecture:
+    handler: src/admin/lecture/createLecture.main
+    warmup: v1
+    timeout: 25
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/createLecture
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+  # update lecture
+  UpdateLecture:
+    handler: src/admin/lecture/updateLecture.main
+    warmup: v1
+    timeout: 20
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/updateLecture
+          method: PUT
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # list workbooks
+  ListWorkbooks:
+    handler: src/admin/workBook/listWorkbooks.main
+    warmup: v1
+    timeout: 30
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/listWorkbooks/{enterpriseId}
+          method: GET
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              paths:
+                enterpriseId: true
+
+  # Get presigned url for uploading material
+  UploadMaterial:
+    handler: src/admin/lecture/upload.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/uploads
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+  # Update upload material of a participant
+  UpdateUploadMaterial:
+    handler: src/admin/lecture/updateUpload.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/updateUploaded
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+  # delete file s3 bucket and update upload material of a participant
+  DeleteUploadedMaterial:
+    handler: src/admin/lecture/deleteUpload.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/deleteUploaded
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+    # GetLectures
+
+  # get lectures
+  GetLectures:
+    handler: src/admin/lecture/getLectures.main
+    warmup: v1
+    timeout: 50
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/getLectures/{monthNumber}/{date}/{year}
+          method: GET
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              paths:
+                monthNumber: true
+
+  # GetLecture
+  GetSingleLecture:
+    handler: src/admin/lecture/getLecture.main
+    warmup: v1
+    timeout: 50
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/getLecture/{lectureId}
+          method: GET
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              paths:
+                lectureId: true
+
+  # GetUserMaterialByUserId
+  GetUserMaterialByUserId:
+    handler: src/admin/lecture/getUserMaterial.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    events:
+      - http:
+          path: admin/getUserMaterial/{userId}/{lectureId}
+          method: GET
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              paths:
+                userId: true
+                lectureId: true
+
+  # ResendEmailLecture
+  ResendEmail:
+    handler: src/admin/lecture/resendEmail.main
+    warmup: v1
+    timeout: 25
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/resendEmail
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # ReassignMaterial
+  ReassignMaterial:
+    handler: src/admin/lecture/reassignMaterial.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/reassignMaterial
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Delete Lecture
+  DeleteLecture:
+    handler: src/admin/lecture/deleteLecture.main
+    warmup: v1
+    timeout: 25
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/deleteLecture
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Get all users(students/tutors)
+  GetUsers:
+    handler: src/admin/user/getUsers.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/getUsers
+          method: GET
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Update student info
+  UpdateStudentInfo:
+    handler: src/admin/lecture/updateStudentInfo.main
+    warmup: v1
+    timeout: 20
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/updateStudent
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Update tutor info
+  UpdateTutorInfo:
+    handler: src/admin/lecture/updateTutorInfo.main
+    warmup: v1
+    timeout: 20
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/updateTutor
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Upload white board images
+  UploadWhiteboardImgs:
+    handler: src/admin/lecture/uploadWhiteboardImg.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/uploadWhiteboardImgs
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # Update white board images
+  UpdateWhiteboardImgs:
+    handler: src/admin/lecture/updateWhiteboardImg.main
+    warmup: v1
+    timeout: 5
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - http:
+          path: admin/updateWhiteboardImgs
+          method: POST
+          authorizer: aws_iam
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                type: true
+
+  # AppSync ListMessage Resolver Function
+  FetchMessages:
+    handler: src/admin/chat/listMessages.main
+    warmup: v1
+    timeout: 25
+    memorySize: 2056
+    environment:
+      VERSION: 0.0.2
+      # Ref name is generated by TitleCasing the layer name & appending LambdaLayer
+    Ref: FetchMessages
+
+  # Cognito PreSignUp Trigger
+  PreSignUp:
+    handler: src/admin/cognitoTrigger/preSignup.main
+    timeout: 25
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - cognitoUserPool:
+          pool: smartclass-dev-user-pool
+          trigger: PreSignUp
+          existing: true
+
+  # Forgot Password
+  ForgotPassword:
+    handler: src/admin/cognitoTrigger/forgotPassword.main
+    timeout: 25
+    memorySize: 1024
+    environment:
+      VERSION: 0.0.2
+    events:
+      - cognitoUserPool:
+          pool: smartclass-dev-user-pool
+          trigger: CustomMessage
+          existing: true
+
+resources:
+  # API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}
+  # Cognito Identity Pool Policy
+  - ${file(resources/cognito-policy.yml)}
+
+  - Outputs:
+      ApiGatewayRestApiId:
+        Value:
+          Ref: ApiGatewayRestApi
+        Export:
+          Name: ${self:custom.stage}-ApiGatewayRestApiId
+
+      ApiGatewayRestApiRootResourceId:
+        Value:
+          Fn::GetAtt:
+            - ApiGatewayRestApi
+            - RootResourceId
+        Export:
+          Name: ${self:custom.stage}-ApiGatewayRestApiRootResourceId
+      # FetchMessageLambdaArn:
+      #   Value:
+      #     Fn::GetAtt:
+      #       - FetchMessages
+      #       - ARN
+      #   Export:
+      #     Name: ${self:custom.stage}-FetchMessageLambdaArn
